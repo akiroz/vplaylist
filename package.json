@@ -1,0 +1,10 @@
+{
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "js-yaml": "^4.0.0",
+        "server": "^1.0.31"
+    }
+}
