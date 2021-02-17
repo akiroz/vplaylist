@@ -10,6 +10,16 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            font-size: 0.8rem;
+        }
+        main {
+            position: fixed;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #FFF;
         }
         #footer, #transport {
             margin: 0;
@@ -22,8 +32,16 @@
             cursor: pointer;
             margin: 0 0.2rem;
         }
-        #app-info {
-            text-align: right;
+        #media-info {
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        #media-info small, #media-info span {
+            text-overflow: ellipsis;
+            margin: 0.5rem 0 0;
+        }
+        #media-info img {
+            height: 3rem;
         }
         th > div {
             display: flex;
@@ -35,14 +53,21 @@
             margin-right: 1rem;
         }
         td > img {
-            height: 4rem;
+            height: 2rem;
+        }
+        #player {
+            min-width: 480px;
+            margin-right: 1rem;
         }
     </style>
 </head>
 <body>
-    <div class="level">
-        <canvas width="640" height="360" style="width: 300px; background: #888"></canvas>
-        <table class="table">
+    <main>
+        <p>Loading ...</p>
+    </main>
+    <div class="level" style="padding: 0 0.5rem">
+        <div id="player"></div>
+        <table class="table is-hoverable">
             <thead>
                 <ion-icon name="reorder-two-outline" style="display:none"></ion-icon>
                 <ion-icon name="caret-down-outline" style="display:none"></ion-icon>
@@ -60,33 +85,41 @@
         </template>
         <template id="list-item">
             <tr>
-                <td style="min-width: 7.2rem"><img src=""></td>
+                <td style="min-width: 3.6rem"><img src=""></td>
             </tr>
         </template>
     </div>
     <footer class="level has-background-dark has-text-light" id="footer">
         <div id="media-info" class="level-left media">
-        </div>
-        <div id="transport" class="level-item level">
-            <ion-icon name="play-skip-back"></ion-icon>
-            <ion-icon name="play-circle"></ion-icon>
-            <ion-icon name="pause-circle" style="display:none"></ion-icon>
-            <ion-icon name="play-skip-forward"></ion-icon>
-            <ion-icon name="shuffle"></ion-icon>
-        </div>
-        <div id="app-info" class="level-right">
-            <div class="container">
-                <p>vPlaylist 1.0</p>
-                <p>Channel: <span id="channel-id"></span></p>
+            <figure class="media-left">
+                    <img class="image" src="">
+            </figure>
+            <div class="media-content">
+                <div class="content">
+                    <span></span><br/>
+                    <small></small>
+                </div>
             </div>
         </div>
+        <div id="transport" class="level-right level">
+            <ion-icon name="play-skip-back" onclick="prevTrack()"></ion-icon>
+            <ion-icon name="play-circle" id="play-button" onclick="player.playVideo()"></ion-icon>
+            <ion-icon name="pause-circle" style="display:none"></ion-icon>
+            <ion-icon name="play-skip-forward" onclick="nextTrack()"></ion-icon>
+            <ion-icon name="shuffle" onclick="shuffle()"></ion-icon>
+        </div>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.4.0/ionicons.min.js" integrity="sha512-esqkwbZWQWGPKMg0apElthYF54n7TMcMGQs/rC8KyWIjuFt+d+kB2n4j7yWOXGn82wMrs5rLMPoiw7n73GJ5Nw==" crossorigin="anonymous"></script>
-    <script>
-        let headers = [];
-        let flatPlaylst = [];
 
-        function render() {
+    <script>
+        let player = null;
+        let headers = [];
+        let flatPlaylist = [];
+        let ready = 0;
+        let currentTrack = 0;
+
+        const loadingText = document.querySelector("main > p");
+
+        function renderList(sorting = { headerIdx: -1, desc: 0 }) {
             const header = document.querySelector("#list-header");
             const tbody = document.querySelector("tbody");
             header.innerHTML = "";
@@ -94,17 +127,30 @@
 
             const headerItem = document.querySelector("#list-header-item");
             header.appendChild(document.createElement("th"));
-            for(let headerText of headers) {
+            for(let [idx, headerText] of headers.entries()) {
                 const entry = headerItem.content.cloneNode(true);
                 entry.querySelector("div").appendChild(document.createTextNode(headerText));
+                const icon = entry.querySelector("ion-icon")
+                icon.onclick = () => sort(idx, sorting.headerIdx === idx ? !sorting.desc : 0);
+                if(sorting.headerIdx === idx) {
+                    requestAnimationFrame(() => {
+                        icon.name = sorting.desc? "caret-down-outline" : "caret-up-outline";
+                    });
+                }
                 header.appendChild(entry);
             }
 
             const listItem = document.querySelector("#list-item");
-            for(let { v, ss, t, meta } of flatPlaylst) {
+            for(let [idx, { v, ss, t, meta }] of flatPlaylist.entries()) {
                 const entry = listItem.content.cloneNode(true);
                 entry.querySelector("img").src = `https://img.youtube.com/vi/${v}/sddefault.jpg`;
                 const tr = entry.querySelector("tr");
+                if(idx === currentTrack) {
+                    tr.className = "has-background-dark has-text-light";
+                } else {
+                    tr.style.cursor = "pointer";
+                    tr.onclick = () => playTrack(idx, sorting);
+                }
                 for(let k of headers) {
                      const td = document.createElement("td"); 
                     td.textContent = meta[k];
@@ -114,37 +160,130 @@
             }
         }
 
-        function sort(headerIdx) {
+        function sort(headerIdx, desc) {
+            const c = flatPlaylist[currentTrack];
             const k = headers[headerIdx];
-            flatPlaylst.sort((a,b) => a.meta[k].localeCompare(b.meta[k]));
-            render();
+            flatPlaylist.sort((a,b) => {
+                if(desc) [a,b] = [b,a];
+                return (a.meta[k] || "").localeCompare(b.meta[k] || "");
+            });
+            currentTrack = flatPlaylist.findIndex(t => t === c);
+            renderList({ headerIdx, desc });
+        }
+
+        function shuffle() {
+            const c = flatPlaylist[currentTrack];
+            for (let i = flatPlaylist.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [flatPlaylist[i], flatPlaylist[j]] = [flatPlaylist[j], flatPlaylist[i]];
+            }
+            currentTrack = flatPlaylist.findIndex(t => t === c);
+            renderList();
+        }
+
+        function playTrack(idx, sorting) {
+            currentTrack = idx;
+            const { v, start, end } = flatPlaylist[currentTrack];
+            player.loadVideoById({ videoId: v, startSeconds: start, endSeconds: end });
+            renderMedia();
+            renderList(sorting);
+        }
+
+        function nextTrack() {
+            if(currentTrack === flatPlaylist.length - 1) playTrack(0);
+            else playTrack(currentTrack + 1);
+        }
+        
+        function prevTrack() {
+            if(currentTrack === 0) playTrack(flatPlaylist.length - 1);
+            else playTrack(currentTrack - 1);
+        }
+
+        function renderMedia() {
+            const { meta, v } = flatPlaylist[currentTrack];
+            document.querySelector("#media-info img").src = `https://img.youtube.com/vi/${v}/sddefault.jpg`;
+            document.querySelector("#media-info span").textContent = `${meta["Title"] || "-"} / ${meta["Artist"] || "-"}`;
+            document.querySelector("#media-info small").textContent = meta["Video Title"];
+        }
+
+        function renderPlayer() {
+            if(flatPlaylist.length < 1) {
+                loadingText.textContent = "No Data";
+                return;
+            }
+            document.querySelector("main").style.display = "none";
+            renderMedia();
+            const { v, start, end } = flatPlaylist[0];
+            player = new YT.Player('player', {
+                height: '270',
+                width: '480',
+                videoId: v,
+                playerVars: {
+                    enablejsapi: 1,
+                    modestbranding: 1,
+                    start, end,
+                },
+                events: {
+                    onStateChange({ data }) {
+                        const btn = document.querySelector("#play-button");
+                        if(data === YT.PlayerState.PLAYING) {
+                            btn.name = "pause-circle";
+                            btn.onclick = () => player.pauseVideo();
+                        }
+                        if(data === YT.PlayerState.PAUSED) {
+                            btn.name = "play-circle";
+                            btn.onclick = () => player.playVideo();
+                        }
+                        if(data === YT.PlayerState.ENDED) {
+                            nextTrack();
+                        }
+                    }
+                }
+            });
         }
         
         async function connect(channel) {
-            document.querySelector("#channel-id").textContent = channel;
             try {
                 const resp = await fetch(`https://vplaylist.herokuapp.com/${channel}`);
                 if(!resp.ok) throw Error(resp.statusText);
                 const playlist = await resp.json();
                 
-                flatPlaylst = [];
+                flatPlaylist = [];
                 const metaHeader = new Set();
                 for(let { v, ts, ... videoMeta } of playlist) {
-                    for(let { ss, t, ... trackMeta } of ts) {
+                    for(let { start, end, ... trackMeta } of ts) {
                         const meta = { ... videoMeta, ... trackMeta };
                         Object.keys(meta).forEach(h => metaHeader.add(h));
-                        flatPlaylst.push({ v, ss, t, meta });
+                        flatPlaylist.push({ v, start, end, meta });
                     }
                 }
                 
                 headers = Array.from(metaHeader).sort((a,b) => a.localeCompare(b));
-                render();
+                renderList();
+                ready++;
+                if(ready >= 2) renderPlayer();
             } catch(err) {
                 console.warn(err);
+                loadingText.textContent = "Error loading playlist";
             }
         }
 
-        connect("811277119991709719");
+        function onYouTubeIframeAPIReady() {
+            ready++;
+            if(ready >= 2) renderPlayer();
+        }
+
+       
+        if(location.hash.startsWith("#")) {
+            // 811277119991709719
+            connect(location.hash.substring(1));
+        } else {
+            loadingText.textContent = "Invalid URL";
+        }
+
     </script>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.4.0/ionicons.min.js" integrity="sha512-esqkwbZWQWGPKMg0apElthYF54n7TMcMGQs/rC8KyWIjuFt+d+kB2n4j7yWOXGn82wMrs5rLMPoiw7n73GJ5Nw==" crossorigin="anonymous"></script>
 </body>
 </html>
