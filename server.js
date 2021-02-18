@@ -11,15 +11,22 @@ const cors = [
 
 server({ port: process.env.PORT, session: false, security: { csrf: false } }, cors, [
     get('/:channel', async ({ params: { channel }}) => {
-        const { data } = await axios.get(`https://discord.com/api/v8/channels/${channel}/messages?limit=1`, {
+        const { data } = await axios.get(`https://discord.com/api/v8/channels/${channel}/messages?limit=50`, {
             headers: { "Authorization": `Bot ${process.env.BOT}` }
         });
         if(!(Array.isArray(data) && data.length > 0)) throw Error("No messages");
 
-        const chunks = (data[0]?.content || "").split("```");
-        if(chunks.length !== 3) throw Error("Invalid message");
-
-        return json(YAML.load(chunks[1]));
+        let out = [];
+        for(let { content } of data) {
+            const chunks = (content || "").split("```");
+            if(chunks.length !== 3) continue;
+            try {
+                const yamlData = YAML.load(chunks[1]);
+                if(!Array.isArray(yamlData)) continue;
+                yamlData.forEach(v => out.push(v))
+            } catch(err) {}
+        }
+        return json(out);
     }),
     error((ctx) => {
         console.warn(ctx.error);

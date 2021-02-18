@@ -57,7 +57,8 @@
         }
         #player {
             min-width: 480px;
-            margin-right: 1rem;
+            margin: 1rem;
+            align-self: flex-start;
         }
     </style>
 </head>
@@ -65,34 +66,36 @@
     <main>
         <p>Loading ...</p>
     </main>
-    <div class="level" style="padding: 0 0.5rem">
+    <div class="level" style="max-height: calc(100vh - 6rem);">
         <div id="player"></div>
-        <table class="table is-hoverable">
-            <thead>
-                <ion-icon name="reorder-two-outline" style="display:none"></ion-icon>
-                <ion-icon name="caret-down-outline" style="display:none"></ion-icon>
-                <ion-icon name="caret-up-outline" style="display:none"></ion-icon>
-                <tr id="list-header"></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <template id="list-header-item">
-            <th>
-                <div>
-                    <ion-icon name="reorder-two-outline"></ion-icon>
-                </div>
-            </th>
-        </template>
-        <template id="list-item">
-            <tr>
-                <td style="min-width: 3.6rem"><img src=""></td>
-            </tr>
-        </template>
+        <div class="container" style="max-height: calc(100vh - 6rem); overflow: scroll;">
+            <table class="table is-hoverable">
+                <thead>
+                    <ion-icon name="reorder-two-outline" style="display:none"></ion-icon>
+                    <ion-icon name="caret-down-outline" style="display:none"></ion-icon>
+                    <ion-icon name="caret-up-outline" style="display:none"></ion-icon>
+                    <tr id="list-header"></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <template id="list-header-item">
+                <th>
+                    <div>
+                        <ion-icon name="reorder-two-outline"></ion-icon>
+                    </div>
+                </th>
+            </template>
+            <template id="list-item">
+                <tr>
+                    <td style="min-width: 3.6rem"><img src=""></td>
+                </tr>
+            </template>
+        </div>
     </div>
     <footer class="level has-background-dark has-text-light" id="footer">
         <div id="media-info" class="level-left media">
             <figure class="media-left">
-                    <img class="image" src="">
+                <img class="image" src="">
             </figure>
             <div class="media-content">
                 <div class="content">
