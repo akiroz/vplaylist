@@ -144,12 +144,16 @@
             }
 
             const listItem = document.querySelector("#list-item");
-            for(let [idx, { v, ss, t, meta }] of flatPlaylist.entries()) {
+            for(let [idx, { v, start, end, disabled, meta }] of flatPlaylist.entries()) {
                 const entry = listItem.content.cloneNode(true);
                 entry.querySelector("img").src = `https://img.youtube.com/vi/${v}/sddefault.jpg`;
                 const tr = entry.querySelector("tr");
                 if(idx === currentTrack) {
                     tr.className = "has-background-dark has-text-light";
+                } else if(disabled) {
+                    tr.style.cursor = "pointer";
+                    tr.style.backgroundColor = "#CCC";
+                    tr.onclick = () => open(`https://www.youtube.com/v/${v}?version=3&start=${start}&end=${end}&autoplay=1`);
                 } else {
                     tr.style.cursor = "pointer";
                     tr.onclick = () => playTrack(idx, sorting);
@@ -184,8 +188,16 @@
             renderList();
         }
 
-        function playTrack(idx, sorting) {
+        function playTrack(idx, sorting, dir) {
             currentTrack = idx;
+            if(flatPlaylist[idx].disabled) {
+                console.log("Skipping disabled track", idx);
+                requestAnimationFrame(() => {
+                    if(dir === "next") nextTrack();
+                    if(dir === "prev") prevTrack();
+                });
+                return;
+            }
             const { v, start, end } = flatPlaylist[currentTrack];
             player.loadVideoById({ videoId: v, startSeconds: start, endSeconds: end });
             renderMedia();
@@ -193,13 +205,13 @@
         }
 
         function nextTrack() {
-            if(currentTrack === flatPlaylist.length - 1) playTrack(0);
-            else playTrack(currentTrack + 1);
+            if(currentTrack === flatPlaylist.length - 1) playTrack(0, undefined, "next");
+            else playTrack(currentTrack + 1, undefined, "next");
         }
         
         function prevTrack() {
-            if(currentTrack === 0) playTrack(flatPlaylist.length - 1);
-            else playTrack(currentTrack - 1);
+            if(currentTrack === 0) playTrack(flatPlaylist.length - 1, undefined, "prev");
+            else playTrack(currentTrack - 1, undefined, "prev");
         }
 
         function renderMedia() {
@@ -254,11 +266,11 @@
                 
                 flatPlaylist = [];
                 const metaHeader = new Set();
-                for(let { v, ts, ... videoMeta } of playlist) {
+                for(let { v, ts, disabled, ... videoMeta } of playlist) {
                     for(let { start, end, ... trackMeta } of ts) {
                         const meta = { ... videoMeta, ... trackMeta };
                         Object.keys(meta).forEach(h => metaHeader.add(h));
-                        flatPlaylist.push({ v, start, end, meta });
+                        flatPlaylist.push({ v, start, end, disabled, meta });
                     }
                 }
                 
@@ -279,7 +291,6 @@
 
        
         if(location.hash.startsWith("#")) {
-            // 811277119991709719
             connect(location.hash.substring(1));
         } else {
             loadingText.textContent = "Invalid URL";
