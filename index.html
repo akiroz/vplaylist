@@ -205,8 +205,8 @@
         function renderMedia() {
             const { meta, v } = flatPlaylist[currentTrack];
             document.querySelector("#media-info img").src = `https://img.youtube.com/vi/${v}/sddefault.jpg`;
-            document.querySelector("#media-info span").textContent = `${meta["Title"] || "-"} / ${meta["Artist"] || "-"}`;
-            document.querySelector("#media-info small").textContent = meta["Video Title"];
+            document.querySelector("#media-info span").textContent = `${meta["Title"] || meta["Tag"] || "-"} / ${meta["Artist"] || meta["User"] || "-"}`;
+            document.querySelector("#media-info small").textContent = meta["Video Title"] || meta["Video"] || "-";
         }
 
         function renderPlayer() {
@@ -246,6 +246,7 @@
         }
         
         async function connect(channel) {
+            document.title = `#${channel}`;
             try {
                 const resp = await fetch(`https://vplaylist.herokuapp.com/${channel}`);
                 if(!resp.ok) throw Error(resp.statusText);
