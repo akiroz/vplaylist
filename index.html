@@ -260,7 +260,7 @@
         async function connect(channel) {
             document.title = `#${channel}`;
             try {
-                const resp = await fetch(`https://vplaylist.herokuapp.com/${channel}`);
+                const resp = await fetch(`https://vtclip.herokuapp.com/${channel}`);
                 if(!resp.ok) throw Error(resp.statusText);
                 const playlist = await resp.json();
                 
