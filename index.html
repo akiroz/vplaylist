@@ -62,7 +62,6 @@
         }
     </style>
 </head>
-
 <body>
     <main>
         <p>Loading ...</p>
@@ -162,7 +161,7 @@
                     tr.onclick = () => playTrack(idx, sorting);
                 }
                 for(let k of headers) {
-                    const td = document.createElement("td");
+                     const td = document.createElement("td"); 
                     td.textContent = meta[k];
                     tr.appendChild(td);
                 }
@@ -281,15 +280,15 @@
 
                 flatPlaylist = [];
                 const metaHeader = new Set();
-                for(let { v, ts, disabled, ...videoMeta } of playlist) {
-                    for(let { start, end, ...trackMeta } of ts) {
-                        const meta = { ...videoMeta, ...trackMeta };
+                for(let { v, ts, disabled, ... videoMeta } of playlist) {
+                    for(let { start, end, ... trackMeta } of ts) {
+                        const meta = { ... videoMeta, ... trackMeta };
                         Object.keys(meta).forEach(h => metaHeader.add(h));
                         flatPlaylist.push({ v, start, end, disabled, meta });
                     }
                 }
 
-                headers = Array.from(metaHeader).sort((a, b) => a.localeCompare(b));
+                headers = Array.from(metaHeader).sort((a,b) => a.localeCompare(b));
                 renderList();
                 ready++;
                 if(ready >= 2) renderPlayer();
