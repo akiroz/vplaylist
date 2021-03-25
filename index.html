@@ -110,9 +110,29 @@
             <ion-icon name="pause-circle" style="display:none"></ion-icon>
             <ion-icon name="play-skip-forward" onclick="nextTrack()"></ion-icon>
             <ion-icon name="shuffle" onclick="shuffle()"></ion-icon>
-            <ion-icon name="repeat" id="repeat-button" onclick="repeat()" src="/repeat-disabled.svg"></ion-icon>
+            <ion-icon id="repeat-button" onclick="repeat()"></ion-icon>
         </div>
     </footer>
+
+    <template id="repeat-1">
+      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+          <polyline points="320 120 368 168 320 216" style="fill:none;stroke:#FFFFFF;stroke-linecap:square;stroke-miterlimit:10;stroke-width:32px" />
+          <polyline points="352 168 64 168 64 264" style="fill:none;stroke:#FFFFFF;stroke-linecap:square;stroke-miterlimit:10;stroke-width:32px" />
+          <polyline points="192 392 144 344 192 296" style="fill:none;stroke:#FFFFFF;stroke-linecap:square;stroke-miterlimit:10;stroke-width:32px" />
+          <polyline  points="160 344 448 344 448 248" style="fill:none;stroke:#FFFFFF;stroke-linecap:square;stroke-miterlimit:10;stroke-width:32px" />
+          <text style="fill:#FFFFFF;" font-style="normal" font-weight="normal" xml:space="preserve" text-anchor="start" font-family="'Arial'" font-size="128" id="svg_5" y="297.5" x="220.5" opacity="undefined" stroke-width="0" stroke="#000" fill="#000000">1</text>
+      </svg>
+    </template>
+
+    <template id="repeat-disabled">
+      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+          <polyline points="320 120 368 168 320 216" style="fill:none;stroke:#FFFFFF;stroke-linecap:square;stroke-miterlimit:10;stroke-width:32px" />
+          <polyline points="352 168 64 168 64 264" style="fill:none;stroke:#FFFFFF;stroke-linecap:square;stroke-miterlimit:10;stroke-width:32px" />
+          <polyline points="192 392 144 344 192 296" style="fill:none;stroke:#FFFFFF;stroke-linecap:square;stroke-miterlimit:10;stroke-width:32px" />
+          <polyline points="160 344 448 344 448 248" style="fill:none;stroke:#FFFFFF;stroke-linecap:square;stroke-miterlimit:10;stroke-width:32px" />
+          <line stroke-width="27" stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_5" y2="403.49999" x2="461.49999" y1="108.5" x1="47.5" opacity="undefined" stroke="#FFFFFF" fill="none"/>
+      </svg>
+    </template>
 
     <script>
         let player = null;
@@ -123,6 +143,10 @@
         let isRepeat = false;
 
         const loadingText = document.querySelector("main > p");
+
+        function inlineIconUri(id) {
+            return `data:image/svg+xml;base64,${btoa(document.getElementById(id).innerHTML.trim())}`;
+        }
 
         function renderList(sorting = { headerIdx: -1, desc: 0 }) {
             const header = document.querySelector("#list-header");
@@ -180,15 +204,12 @@
             renderList({ headerIdx, desc });
         }
 
+        const repeatButton = document.querySelector("#repeat-button");
+        repeatButton.src = inlineIconUri("repeat-disabled");
+
         function repeat() {
             isRepeat = !isRepeat;
-            const btn = document.querySelector("#repeat-button");
-            if (isRepeat) {
-                btn.src = "/repeat-1.svg";
-            }
-            else{
-                btn.src = "/repeat-disabled.svg";
-            }
+            repeatButton.src = inlineIconUri(isRepeat ? "repeat-1" : "repeat-disabled");
         }
 
         function shuffle() {
