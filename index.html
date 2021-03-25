@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>vPlaylist</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css" integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
+        integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
+        crossorigin="anonymous" />
     <style>
         body {
             height: 100vh;
@@ -12,6 +15,7 @@
             justify-content: space-between;
             font-size: 0.8rem;
         }
+
         main {
             position: fixed;
             height: 100vh;
@@ -21,40 +25,52 @@
             align-items: center;
             background: #FFF;
         }
-        #footer, #transport {
+
+        #footer,
+        #transport {
             margin: 0;
         }
+
         #footer {
             padding: 0.5rem 1rem 0.5rem;
         }
-        #transport > ion-icon {
+
+        #transport>ion-icon {
             font-size: 36px;
             cursor: pointer;
             margin: 0 0.2rem;
         }
+
         #media-info {
             white-space: nowrap;
             overflow: hidden;
         }
-        #media-info small, #media-info span {
+
+        #media-info small,
+        #media-info span {
             text-overflow: ellipsis;
             margin: 0.5rem 0 0;
         }
+
         #media-info img {
             height: 3rem;
         }
-        th > div {
+
+        th>div {
             display: flex;
             align-items: center;
         }
-        th > div > ion-icon {
+
+        th>div>ion-icon {
             font-size: 18px;
             cursor: pointer;
             margin-right: 1rem;
         }
-        td > img {
+
+        td>img {
             height: 2rem;
         }
+
         #player {
             min-width: 480px;
             margin: 1rem;
@@ -62,6 +78,7 @@
         }
     </style>
 </head>
+
 <body>
     <main>
         <p>Loading ...</p>
@@ -99,7 +116,7 @@
             </figure>
             <div class="media-content">
                 <div class="content">
-                    <span></span><br/>
+                    <span></span><br />
                     <small></small>
                 </div>
             </div>
@@ -110,6 +127,7 @@
             <ion-icon name="pause-circle" style="display:none"></ion-icon>
             <ion-icon name="play-skip-forward" onclick="nextTrack()"></ion-icon>
             <ion-icon name="shuffle" onclick="shuffle()"></ion-icon>
+            <ion-icon name="repeat" id="repeat-button" onclick="repeat()" src="/repeat-disabled.svg"></ion-icon>
         </div>
     </footer>
 
@@ -119,6 +137,7 @@
         let flatPlaylist = [];
         let ready = 0;
         let currentTrack = 0;
+        let isRepeat = false;
 
         const loadingText = document.querySelector("main > p");
 
@@ -130,27 +149,27 @@
 
             const headerItem = document.querySelector("#list-header-item");
             header.appendChild(document.createElement("th"));
-            for(let [idx, headerText] of headers.entries()) {
+            for (let [idx, headerText] of headers.entries()) {
                 const entry = headerItem.content.cloneNode(true);
                 entry.querySelector("div").appendChild(document.createTextNode(headerText));
                 const icon = entry.querySelector("ion-icon")
                 icon.onclick = () => sort(idx, sorting.headerIdx === idx ? !sorting.desc : 0);
-                if(sorting.headerIdx === idx) {
+                if (sorting.headerIdx === idx) {
                     requestAnimationFrame(() => {
-                        icon.name = sorting.desc? "caret-down-outline" : "caret-up-outline";
+                        icon.name = sorting.desc ? "caret-down-outline" : "caret-up-outline";
                     });
                 }
                 header.appendChild(entry);
             }
 
             const listItem = document.querySelector("#list-item");
-            for(let [idx, { v, start, end, disabled, meta }] of flatPlaylist.entries()) {
+            for (let [idx, { v, start, end, disabled, meta }] of flatPlaylist.entries()) {
                 const entry = listItem.content.cloneNode(true);
                 entry.querySelector("img").src = `https://img.youtube.com/vi/${v}/sddefault.jpg`;
                 const tr = entry.querySelector("tr");
-                if(idx === currentTrack) {
+                if (idx === currentTrack) {
                     tr.className = "has-background-dark has-text-light";
-                } else if(disabled) {
+                } else if (disabled) {
                     tr.style.cursor = "pointer";
                     tr.style.backgroundColor = "#CCC";
                     tr.onclick = () => open(`https://www.youtube.com/v/${v}?version=3&start=${start}&end=${end}&autoplay=1`);
@@ -158,8 +177,8 @@
                     tr.style.cursor = "pointer";
                     tr.onclick = () => playTrack(idx, sorting);
                 }
-                for(let k of headers) {
-                     const td = document.createElement("td"); 
+                for (let k of headers) {
+                    const td = document.createElement("td");
                     td.textContent = meta[k];
                     tr.appendChild(td);
                 }
@@ -170,12 +189,24 @@
         function sort(headerIdx, desc) {
             const c = flatPlaylist[currentTrack];
             const k = headers[headerIdx];
-            flatPlaylist.sort((a,b) => {
-                if(desc) [a,b] = [b,a];
+            flatPlaylist.sort((a, b) => {
+                if (desc) [a, b] = [b, a];
                 return (a.meta[k] || "").localeCompare(b.meta[k] || "");
             });
             currentTrack = flatPlaylist.findIndex(t => t === c);
             renderList({ headerIdx, desc });
+        }
+
+        function repeat() {
+            isRepeat = !isRepeat;
+            const btn = document.querySelector("#repeat-button");
+            if (isRepeat) {
+                btn.src = "/repeat-1.svg";
+            }
+            else{
+                //btn.name = "repeat";
+                btn.src = "/repeat-disabled.svg";
+            }
         }
 
         function shuffle() {
@@ -190,11 +221,11 @@
 
         function playTrack(idx, sorting, dir) {
             currentTrack = idx;
-            if(flatPlaylist[idx].disabled) {
+            if (flatPlaylist[idx].disabled) {
                 console.log("Skipping disabled track", idx);
                 requestAnimationFrame(() => {
-                    if(dir === "next") nextTrack();
-                    if(dir === "prev") prevTrack();
+                    if (dir === "next") nextTrack();
+                    if (dir === "prev") prevTrack();
                 });
                 return;
             }
@@ -205,12 +236,19 @@
         }
 
         function nextTrack() {
-            if(currentTrack === flatPlaylist.length - 1) playTrack(0, undefined, "next");
-            else playTrack(currentTrack + 1, undefined, "next");
+            if (currentTrack === flatPlaylist.length - 1) {
+                playTrack(0, undefined, "next");
+            }
+            else if (isRepeat){
+                playTrack(currentTrack, undefined, "next");
+            }
+            else {
+                playTrack(currentTrack + 1, undefined, "next");
+            }
         }
-        
+
         function prevTrack() {
-            if(currentTrack === 0) playTrack(flatPlaylist.length - 1, undefined, "prev");
+            if (currentTrack === 0) playTrack(flatPlaylist.length - 1, undefined, "prev");
             else playTrack(currentTrack - 1, undefined, "prev");
         }
 
@@ -222,7 +260,7 @@
         }
 
         function renderPlayer() {
-            if(flatPlaylist.length < 1) {
+            if (flatPlaylist.length < 1) {
                 loadingText.textContent = "No Data";
                 return;
             }
@@ -241,44 +279,44 @@
                 events: {
                     onStateChange({ data }) {
                         const btn = document.querySelector("#play-button");
-                        if(data === YT.PlayerState.PLAYING) {
+                        if (data === YT.PlayerState.PLAYING) {
                             btn.name = "pause-circle";
                             btn.onclick = () => player.pauseVideo();
                         }
-                        if(data === YT.PlayerState.PAUSED) {
+                        if (data === YT.PlayerState.PAUSED) {
                             btn.name = "play-circle";
                             btn.onclick = () => player.playVideo();
                         }
-                        if(data === YT.PlayerState.ENDED) {
+                        if (data === YT.PlayerState.ENDED) {
                             nextTrack();
                         }
                     }
                 }
             });
         }
-        
+
         async function connect(channel) {
             document.title = `#${channel}`;
             try {
                 const resp = await fetch(`https://vtclip.herokuapp.com/${channel}`);
-                if(!resp.ok) throw Error(resp.statusText);
+                if (!resp.ok) throw Error(resp.statusText);
                 const playlist = await resp.json();
-                
+
                 flatPlaylist = [];
                 const metaHeader = new Set();
-                for(let { v, ts, disabled, ... videoMeta } of playlist) {
-                    for(let { start, end, ... trackMeta } of ts) {
-                        const meta = { ... videoMeta, ... trackMeta };
+                for (let { v, ts, disabled, ...videoMeta } of playlist) {
+                    for (let { start, end, ...trackMeta } of ts) {
+                        const meta = { ...videoMeta, ...trackMeta };
                         Object.keys(meta).forEach(h => metaHeader.add(h));
                         flatPlaylist.push({ v, start, end, disabled, meta });
                     }
                 }
-                
-                headers = Array.from(metaHeader).sort((a,b) => a.localeCompare(b));
+
+                headers = Array.from(metaHeader).sort((a, b) => a.localeCompare(b));
                 renderList();
                 ready++;
-                if(ready >= 2) renderPlayer();
-            } catch(err) {
+                if (ready >= 2) renderPlayer();
+            } catch (err) {
                 console.warn(err);
                 loadingText.textContent = "Error loading playlist";
             }
@@ -286,11 +324,11 @@
 
         function onYouTubeIframeAPIReady() {
             ready++;
-            if(ready >= 2) renderPlayer();
+            if (ready >= 2) renderPlayer();
         }
 
-       
-        if(location.hash.startsWith("#")) {
+
+        if (location.hash.startsWith("#")) {
             connect(location.hash.substring(1));
         } else {
             loadingText.textContent = "Invalid URL";
@@ -299,6 +337,9 @@
     </script>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.4.0/ionicons.min.js" integrity="sha512-esqkwbZWQWGPKMg0apElthYF54n7TMcMGQs/rC8KyWIjuFt+d+kB2n4j7yWOXGn82wMrs5rLMPoiw7n73GJ5Nw==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.4.0/ionicons.min.js"
+        integrity="sha512-esqkwbZWQWGPKMg0apElthYF54n7TMcMGQs/rC8KyWIjuFt+d+kB2n4j7yWOXGn82wMrs5rLMPoiw7n73GJ5Nw=="
+        crossorigin="anonymous"></script>
 </body>
+
 </html>
