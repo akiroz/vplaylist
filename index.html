@@ -110,6 +110,7 @@
             <ion-icon name="pause-circle" style="display:none"></ion-icon>
             <ion-icon name="play-skip-forward" onclick="nextTrack()"></ion-icon>
             <ion-icon name="shuffle" onclick="shuffle()"></ion-icon>
+            <ion-icon name="repeat" id="repeat-button" onclick="repeat()" src="/repeat-disabled.svg"></ion-icon>
         </div>
     </footer>
 
@@ -119,6 +120,7 @@
         let flatPlaylist = [];
         let ready = 0;
         let currentTrack = 0;
+        let isRepeat = false;
 
         const loadingText = document.querySelector("main > p");
 
@@ -178,6 +180,17 @@
             renderList({ headerIdx, desc });
         }
 
+        function repeat() {
+            isRepeat = !isRepeat;
+            const btn = document.querySelector("#repeat-button");
+            if (isRepeat) {
+                btn.src = "/repeat-1.svg";
+            }
+            else{
+                btn.src = "/repeat-disabled.svg";
+            }
+        }
+
         function shuffle() {
             const c = flatPlaylist[currentTrack];
             for (let i = flatPlaylist.length - 1; i > 0; i--) {
@@ -205,10 +218,11 @@
         }
 
         function nextTrack() {
-            if(currentTrack === flatPlaylist.length - 1) playTrack(0, undefined, "next");
+            if (currentTrack === flatPlaylist.length - 1) playTrack(0, undefined, "next");
+            else if (isRepeat) playTrack(currentTrack, undefined, "next");
             else playTrack(currentTrack + 1, undefined, "next");
         }
-        
+
         function prevTrack() {
             if(currentTrack === 0) playTrack(flatPlaylist.length - 1, undefined, "prev");
             else playTrack(currentTrack - 1, undefined, "prev");
@@ -256,14 +270,14 @@
                 }
             });
         }
-        
+
         async function connect(channel) {
             document.title = `#${channel}`;
             try {
                 const resp = await fetch(`https://vtclip.herokuapp.com/${channel}`);
                 if(!resp.ok) throw Error(resp.statusText);
                 const playlist = await resp.json();
-                
+
                 flatPlaylist = [];
                 const metaHeader = new Set();
                 for(let { v, ts, disabled, ... videoMeta } of playlist) {
@@ -273,7 +287,7 @@
                         flatPlaylist.push({ v, start, end, disabled, meta });
                     }
                 }
-                
+
                 headers = Array.from(metaHeader).sort((a,b) => a.localeCompare(b));
                 renderList();
                 ready++;
@@ -289,7 +303,7 @@
             if(ready >= 2) renderPlayer();
         }
 
-       
+
         if(location.hash.startsWith("#")) {
             connect(location.hash.substring(1));
         } else {
