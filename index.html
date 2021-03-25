@@ -215,6 +215,7 @@
             player.loadVideoById({ videoId: v, startSeconds: start, endSeconds: end });
             renderMedia();
             renderList(sorting);
+            history.pushState(null, null, "?v=" + v +"&s="+start + "#" + location.hash.substring(1))
         }
 
         function nextTrack() {
@@ -235,14 +236,14 @@
             document.querySelector("#media-info small").textContent = meta["Video Title"] || meta["Video"] || "-";
         }
 
-        function renderPlayer() {
+        function renderPlayer(startingVidIdx = 0) {
             if(flatPlaylist.length < 1) {
                 loadingText.textContent = "No Data";
                 return;
             }
             document.querySelector("main").style.display = "none";
             renderMedia();
-            const { v, start, end } = flatPlaylist[0];
+            const { v, start, end } = flatPlaylist[startingVidIdx];
             player = new YT.Player('player', {
                 height: '270',
                 width: '480',
@@ -271,7 +272,7 @@
             });
         }
 
-        async function connect(channel) {
+        async function connect(channel,startingVid,startingVidTimestamps) {
             document.title = `#${channel}`;
             try {
                 const resp = await fetch(`https://vtclip.herokuapp.com/${channel}`);
@@ -289,9 +290,21 @@
                 }
 
                 headers = Array.from(metaHeader).sort((a,b) => a.localeCompare(b));
+
+                let startingVidIdx = 0;
+                if (startingVid) {
+                    if(startingVidTimestamps){
+                        startingVidTimestamps = parseInt(startingVidTimestamps)
+                        startingVidIdx = flatPlaylist.findIndex(x => x.v === startingVid && x.start === startingVidTimestamps);
+                    } else {
+                        startingVidIdx = flatPlaylist.findIndex(x => x.v === startingVid);
+                    }
+                    currentTrack = startingVidIdx;
+                }
+
                 renderList();
                 ready++;
-                if(ready >= 2) renderPlayer();
+                if(ready >= 2) renderPlayer(startingVidIdx);
             } catch(err) {
                 console.warn(err);
                 loadingText.textContent = "Error loading playlist";
@@ -303,9 +316,9 @@
             if(ready >= 2) renderPlayer();
         }
 
-
-        if(location.hash.startsWith("#")) {
-            connect(location.hash.substring(1));
+        const url = new URL(location)
+        if(url.hash){
+            connect(url.hash.substring(1),url.searchParams.get('v'),url.searchParams.get('s'));
         } else {
             loadingText.textContent = "Invalid URL";
         }
