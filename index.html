@@ -236,7 +236,7 @@
             player.loadVideoById({ videoId: v, startSeconds: start, endSeconds: end });
             renderMedia();
             renderList(sorting);
-            history.pushState(null, null, "?v=" + v +"&s="+start + "#" + location.hash.substring(1))
+            history.pushState(null, null, `?v=${v}&s=${start}#${location.hash.substring(1)}`);
         }
 
         function nextTrack() {
@@ -293,7 +293,7 @@
             });
         }
 
-        async function connect(channel,startingVid,startingVidTimestamps) {
+        async function connect(channel, startingVid, startingVidTimestamp) {
             document.title = `#${channel}`;
             try {
                 const resp = await fetch(`https://vtclip.herokuapp.com/${channel}`);
@@ -314,9 +314,9 @@
 
                 let startingVidIdx = 0;
                 if (startingVid) {
-                    if(startingVidTimestamps){
-                        startingVidTimestamps = parseInt(startingVidTimestamps)
-                        startingVidIdx = flatPlaylist.findIndex(x => x.v === startingVid && x.start === startingVidTimestamps);
+                    if(startingVidTimestamp){
+                        startingVidTimestamp = parseInt(startingVidTimestamp)
+                        startingVidIdx = flatPlaylist.findIndex(x => x.v === startingVid && x.start === startingVidTimestamp);
                     } else {
                         startingVidIdx = flatPlaylist.findIndex(x => x.v === startingVid);
                     }
@@ -339,7 +339,7 @@
 
         const url = new URL(location)
         if(url.hash){
-            connect(url.hash.substring(1),url.searchParams.get('v'),url.searchParams.get('s'));
+            connect(url.hash.substring(1), url.searchParams.get('v'), url.searchParams.get('s'));
         } else {
             loadingText.textContent = "Invalid URL";
         }
