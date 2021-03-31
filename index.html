@@ -57,17 +57,17 @@
         }
         #player {
             min-width: 480px;
-            margin: 1rem;
-            align-self: flex-start;
         }
     </style>
 </head>
 <body>
-    <main>
-        <p>Loading ...</p>
-    </main>
-    <div class="level" style="max-height: calc(100vh - 6rem);">
-        <div id="player"></div>
+    <div class="level" style="max-height: calc(100vh - 6rem); align-items: flex-start;">
+        <div style="padding: 1rem;">
+            <div id="player"></div>
+            <h3>vplaylist</h3>
+            <p>A simple playlist UI for viewing tagged youtube videos from discord.</p>
+            <a href="https://github.com/akiroz/vplaylist">Feature requests / contributions welcome.</a>
+        </div>
         <div class="container" style="max-height: calc(100vh - 6rem); overflow: scroll;">
             <table class="table is-hoverable">
                 <thead>
@@ -113,6 +113,10 @@
             <ion-icon id="repeat-button" onclick="repeat()"></ion-icon>
         </div>
     </footer>
+
+    <main>
+        <p>Loading ...</p>
+    </main>
 
     <template id="repeat-1">
       <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
