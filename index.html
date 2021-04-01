@@ -236,7 +236,14 @@
                 });
                 return;
             }
+
+            // Handle next track overlap bug #3
             const { v, start, end } = flatPlaylist[currentTrack];
+            const currentVideoId = new URL(player.getVideoUrl()).searchParams.get("v");
+            if(currentVideoId === v && player.getCurrentTime() >= start) {
+                player.seekTo(start);
+            }
+
             player.loadVideoById({ videoId: v, startSeconds: start, endSeconds: end });
             renderMedia();
             renderList(sorting);
